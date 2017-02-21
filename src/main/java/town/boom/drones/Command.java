@@ -5,6 +5,9 @@ import lombok.Builder;
 @Builder
 public class Command {
 
+	public static final String COMMAND_LOAD = "L";
+	public static final String COMMAND_DELIVER = "D";
+
     private String command;
     private int productId;
     private int numberOfProducts;
