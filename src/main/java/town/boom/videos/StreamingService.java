@@ -51,6 +51,7 @@ public class StreamingService extends Problem {
 
     @Override
     public List solve() {
-        return new ArrayList();
+        ArrayList<CacheServerStatus> solutions = new ArrayList<>();
+        return solutions;
     }
 }
