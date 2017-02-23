@@ -14,10 +14,6 @@ public class Main {
         catch (FileNotFoundException fnfe) {
             throw new RuntimeException(fnfe);
         }
-
-        state.getOrders().forEach(
-                
-        );
-
+        System.out.println(state.toString());
     }
 }
