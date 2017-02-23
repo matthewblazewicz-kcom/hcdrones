@@ -3,6 +3,7 @@ package town.boom.videos;
 import town.boom.Problem;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.IntStream;
@@ -51,6 +52,13 @@ public class StreamingService extends Problem {
 
     @Override
     public List solve() {
-        return new ArrayList();
+        ArrayList result = new ArrayList();
+        Arrays.stream(requests)
+                .forEach(request -> {
+                    int endpointId = request.getEndpointId();
+                    
+
+                });
+        return result;
     }
 }

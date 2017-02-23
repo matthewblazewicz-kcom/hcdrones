@@ -19,6 +19,8 @@ public class Endpoint {
     private int[] latencyByServerId; // -1 == no connection
     private int totalNumberOfServers;
 
+    private int[] connectedServersIdsOrderedByLatency;
+
     public static Endpoint readFromScanner(Scanner scanner, int totalNumberOfServers) {
         Endpoint endpoint = new Endpoint();
         endpoint.totalNumberOfServers = totalNumberOfServers;
@@ -50,5 +52,13 @@ public class Endpoint {
             endpoint.latencyByServerId[endpoint.connectedServersIds[i]] = endpoint.connectedServersLatency[i];
         }
         return endpoint;
+    }
+
+    public int[] getServerIdsInOrderOfLatency() {
+        if (connectedServersIdsOrderedByLatency != null) {
+            return connectedServersIdsOrderedByLatency;
+        }
+        
+
     }
 }
