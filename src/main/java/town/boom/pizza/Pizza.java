@@ -28,6 +28,10 @@ public class Pizza {
     int[][] tomatoes;
     int[][] mushrooms;
 
+    int[][] leftovers;
+    int[][] aggregatedLeftovers;
+    int[][] yetAnotherAggregatedLeftovers;
+
     public static Pizza fromFile(Scanner scanner) {
         Pizza pizza = new Pizza();
         pizza.numberOfRows = scanner.nextInt();
@@ -36,6 +40,9 @@ public class Pizza {
         pizza.maximumIngredients = scanner.nextInt();
 
         pizza.layout = new String[pizza.numberOfRows][pizza.numberOfCols];
+        pizza.leftovers = new int[pizza.numberOfRows][pizza.numberOfCols];
+        pizza.aggregatedLeftovers = new int[pizza.numberOfRows][pizza.numberOfCols];
+        pizza.yetAnotherAggregatedLeftovers = new int[pizza.numberOfRows][pizza.numberOfCols];
         IntStream.range(0, pizza.numberOfRows).forEach(row -> {
                         scanner.nextLine();
                         IntStream.range(0, pizza.numberOfCols).forEach(col -> {
@@ -53,7 +60,8 @@ public class Pizza {
     }
 
     public static void main(String... args) {
-        String pathname = args[0];
+        String pathname = "resources\\big.in";
+//        String pathname = args[0];
         try (Scanner scanner = new Scanner (new File(pathname))) {
             Pizza pizza = fromFile(scanner);
             pizza.slice();
@@ -184,22 +192,54 @@ public class Pizza {
 
         int maxArea = 0;
         List<Slice> bestPizzaInTown = null;
-        for (Shape shape : findCorrectShapes()) {
+        List<Shape> correctShapes = findCorrectShapes();
 
-            int currentRow = 0;
-            int currentCol = 0;
+        int subpizzaRow = 0;
+        int subpizzaCol = 0;
+        int subpizzaMaxRow = numberOfRows - 1;
+        int subpizzaMaxCol = numberOfCols - 1;
+
+        for (Shape shape : correctShapes) {
+            for (int r = 0; r < numberOfRows; r++) {
+                for (int c = 0; c < numberOfCols; c++) {
+                    leftovers[r][c] = 0;
+                }
+            }
+
+            System.out.println("Shape: " + shape.getWidth() + " " + shape.getHeight());
+            int currentRow = subpizzaRow;
+            int currentCol = subpizzaCol;
             List<Slice> slices = new ArrayList<>();
             int coveredArea = 0;
             int shapeSize = shape.getHeight() * shape.getWidth();
-            while (currentCol <= numberOfCols - shape.getWidth()) {
-                while (currentRow <= numberOfRows - shape.getHeight()) {
+//            while (currentCol <= 1 + subpizzaMaxCol - shape.getWidth()) {
+            while (currentCol <= subpizzaMaxCol) {
+                if (currentCol > 1 + subpizzaMaxCol - shape.getWidth()) {
+                    for (int col = currentCol; col <= subpizzaMaxCol ; col ++) {
+                        for (int r = currentRow; r < subpizzaMaxRow; r++) {
+                            leftovers[currentRow][col] = 1;
+                        }
+                    }
+                    break;
+                }
+                while (currentRow <= 1 + subpizzaMaxRow - shape.getHeight()) {
+
                     Slice slice = new Slice(currentRow, currentCol, shape.getHeight(), shape.getWidth());
                     if (doesItFit(slice)) {
                         currentRow += shape.getHeight();
                         slices.add(slice);
                         coveredArea += shapeSize;
                     } else {
+                        for (int col = currentCol; col < currentCol + shape.getWidth(); col ++) {
+                            leftovers[currentRow][col] = 1;
+                        }
                         currentRow += 1;
+                    }
+                }
+
+                for (int col = currentCol; col < currentCol + shape.getWidth(); col ++) {
+                    for (int r = currentRow; r < subpizzaMaxRow; r++) {
+                        leftovers[currentRow][col] = 1;
                     }
                 }
                 currentRow = 0;
@@ -210,6 +250,65 @@ public class Pizza {
                 maxArea = coveredArea;
                 bestPizzaInTown = slices;
             }
+
+            for (int r = 0; r < numberOfRows; r++) {
+                for (int c = 0; c < numberOfCols; c++) {
+                    if (c == 0) {
+                        aggregatedLeftovers[r][c] = leftovers[r][c];
+                    } else {
+                        if (leftovers[r][c] == 0) {
+                            aggregatedLeftovers[r][c] = 0;
+                        } else {
+                            aggregatedLeftovers[r][c] = aggregatedLeftovers[r][c - 1] + 1;
+                        }
+                    }
+                }
+            }
+
+
+        System.out.println();
+        for (int row = 0; row < numberOfRows; row++) {
+            for (int col = 0; col < numberOfCols; col++) {
+                System.out.print(String.format("%4d", leftovers[row][col]));
+            }
+            System.out.println();
+        }
+
+            int largestArea = 0;
+            int subRow = 0;
+            int subCol = 0;
+            int subMaxRow = 0;
+            int subMaxCol = 0;
+
+            for (int c = 0; c < numberOfCols; c++) {
+                int goBack = 0;
+                int currentMinimum = 0;
+                for (int r = 0; r < numberOfRows; r++) {
+                    if (aggregatedLeftovers[r][c] > 0) {
+                        goBack++;
+                        if (currentMinimum > aggregatedLeftovers[r][c]) {
+                            currentMinimum = aggregatedLeftovers[r][c];
+                        }
+                        int currentArea = goBack * currentMinimum;
+                        if (largestArea < currentArea) {
+                            largestArea = currentArea;
+                            subMaxRow = r;
+                            subMaxCol = c;
+                            subRow = r - goBack + 1;
+                            subCol = c - currentMinimum + 1;
+                        }
+                    } else {
+                        goBack = 0;
+                    }
+                }
+            }
+
+            System.out.println("Leftovers");
+            System.out.println(subRow);
+            System.out.println(subCol);
+            System.out.println(subMaxRow);
+            System.out.println(subMaxCol);
+
         }
         return bestPizzaInTown;
     }
