@@ -2,9 +2,8 @@ package town.boom.pizza;
 
 
 import lombok.ToString;
+import town.boom.Problem;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -12,7 +11,7 @@ import java.util.stream.IntStream;
 
 
 @ToString
-public class Pizza {
+public class Pizza extends Problem {
 
     private int numberOfRows;
     private int numberOfCols;
@@ -28,39 +27,27 @@ public class Pizza {
     int[][] tomatoes;
     int[][] mushrooms;
 
-    public static Pizza fromFile(Scanner scanner) {
-        Pizza pizza = new Pizza();
-        pizza.numberOfRows = scanner.nextInt();
-        pizza.numberOfCols = scanner.nextInt();
-        pizza.minimumIngredients = scanner.nextInt();
-        pizza.maximumIngredients = scanner.nextInt();
+    @Override
+    public void process(Scanner scanner) {
+        numberOfRows = scanner.nextInt();
+        numberOfCols = scanner.nextInt();
+        minimumIngredients = scanner.nextInt();
+        maximumIngredients = scanner.nextInt();
 
-        pizza.layout = new String[pizza.numberOfRows][pizza.numberOfCols];
-        IntStream.range(0, pizza.numberOfRows).forEach(row -> {
+        layout = new String[numberOfRows][numberOfCols];
+        IntStream.range(0, numberOfRows).forEach(row -> {
                         scanner.nextLine();
-                        IntStream.range(0, pizza.numberOfCols).forEach(col -> {
-                                pizza.layout[row][col] = scanner.findInLine("[MT]");
+                        IntStream.range(0, numberOfCols).forEach(col -> {
+                                layout[row][col] = scanner.findInLine("[MT]");
                         });
         });
 
-        return pizza;
     }
 
-    public void slice() {
-//        System.out.println(this);
+    @Override
+    public List solve() {
         justDoIt();
-        deliverPizza(cycleThroughShapes());
-    }
-
-    public static void main(String... args) {
-        String pathname = args[0];
-        try (Scanner scanner = new Scanner (new File(pathname))) {
-            Pizza pizza = fromFile(scanner);
-            pizza.slice();
-        }
-        catch (FileNotFoundException fnfe) {
-            throw new RuntimeException(fnfe);
-        }
+        return cycleThroughShapes();
     }
 
     private void justDoIt() {
@@ -106,49 +93,6 @@ public class Pizza {
                 }
             }
         }
-//        for (int row = 0; row < numberOfRows; row++) {
-//            for (int col = 0; col < numberOfCols; col++) {
-//                System.out.print(layout[row][col]);
-//            }
-//            System.out.println();
-//        }
-//        System.out.println();
-//        for (int row = 0; row < numberOfRows; row++) {
-//            for (int col = 0; col < numberOfCols; col++) {
-//                System.out.print(String.format("%4d", mushroomsInRow[row][col]));
-//            }
-//            System.out.println();
-//        }
-//        System.out.println();
-//        for (int row = 0; row < numberOfRows; row++) {
-//            for (int col = 0; col < numberOfCols; col++) {
-//                System.out.print(String.format("%4d", tomatoesInRow[row][col]));
-//            }
-//            System.out.println();
-//        }
-
-
-//        System.out.println();
-//        System.out.println();
-//        for (int row = 0; row < numberOfRows; row++) {
-//            for (int col = 0; col < numberOfCols; col++) {
-//                System.out.print(String.format("%4d", mushrooms[row][col]));
-//            }
-//            System.out.println();
-//        }
-//
-//        System.out.println();
-//
-//        System.out.println();
-//        for (int row = 0; row < numberOfRows; row++) {
-//            for (int col = 0; col < numberOfCols; col++) {
-//                System.out.print(String.format("%4d", tomatoes[row][col]));
-//            }
-//            System.out.println();
-//        }
-//        System.out.println();
-//        System.out.println(numberOfMushrooms);
-//        System.out.println(numberOfTomatoes);
     }
 
     private boolean doesItFit(Slice slice) {
@@ -212,12 +156,5 @@ public class Pizza {
             }
         }
         return bestPizzaInTown;
-    }
-
-    private void deliverPizza(List<Slice> slices) {
-        System.out.println(slices.size());
-        for (Slice slice : slices) {
-            System.out.println(slice);
-        }
     }
 }
