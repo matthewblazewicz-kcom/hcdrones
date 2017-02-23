@@ -1,5 +1,6 @@
 package town.boom.videos;
 
+import lombok.Getter;
 import town.boom.Problem;
 
 import java.util.ArrayList;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.IntStream;
 
+@Getter
 public class StreamingService extends Problem {
 
     private int numberOfVideos;
@@ -52,6 +54,11 @@ public class StreamingService extends Problem {
     @Override
     public List solve() {
         ArrayList<CacheServerStatus> solutions = new ArrayList<>();
-        return solutions;
+//        AnythingAnywhereSolution solution = new AnythingAnywhereSolution(this);
+//        PerEndpointSolution solution = new PerEndpointSolution(this);
+//        PerEndpointSolutionWithScore solution = new PerEndpointSolutionWithScore(this);
+//        PerEndpointSolutionWithScoreAndSize solution = new PerEndpointSolutionWithScoreAndSize(this);
+        PerRequestByWeightedScore solution = new PerRequestByWeightedScore(this);
+        return solution.solveIt();
     }
 }
