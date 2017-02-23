@@ -3,6 +3,7 @@ package town.boom.videos;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Scanner;
 import java.util.stream.IntStream;
@@ -19,7 +20,7 @@ public class Endpoint {
     private int[] latencyByServerId; // -1 == no connection
     private int totalNumberOfServers;
 
-    private int[] connectedServersIdsOrderedByLatency;
+    private Integer[] connectedServersIdsOrderedByLatency;
 
     public static Endpoint readFromScanner(Scanner scanner, int totalNumberOfServers) {
         Endpoint endpoint = new Endpoint();
@@ -54,11 +55,15 @@ public class Endpoint {
         return endpoint;
     }
 
-    public int[] getServerIdsInOrderOfLatency() {
+    public Integer[] getServerIdsInOrderOfLatency() {
         if (connectedServersIdsOrderedByLatency != null) {
             return connectedServersIdsOrderedByLatency;
         }
-        
+        connectedServersIdsOrderedByLatency = IntStream.range(0, connectedServersIds.length).boxed()
+                .map(i -> Pair.<Integer, Integer>of(connectedServersIds[i], latency - connectedServersLatency[i]))
+                .sorted((o1, o2) -> o2.getRight().compareTo(o1.getRight()))
+                .map(Pair::getLeft).toArray(Integer[]::new);
 
+        return connectedServersIdsOrderedByLatency;
     }
 }

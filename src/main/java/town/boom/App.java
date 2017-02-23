@@ -1,7 +1,6 @@
 package town.boom;
 
 import lombok.RequiredArgsConstructor;
-import town.boom.pizza.Pizza;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,15 +42,5 @@ public class App {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void main(String... args) {
-        if (args.length != 2 ) {
-            System.err.println("Input and output file names are required as the first and the second arguments.\n");
-        }
-        App.withProblem(new Pizza())
-                .from(new File(args[0]))
-                .solve()
-                .writeOutput(new File(args[1]));
     }
 }

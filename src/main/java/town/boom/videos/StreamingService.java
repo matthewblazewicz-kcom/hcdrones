@@ -52,13 +52,41 @@ public class StreamingService extends Problem {
 
     @Override
     public List solve() {
-        ArrayList result = new ArrayList();
+        CacheServerStatus[] servers = new CacheServerStatus[numberOfServers];
         Arrays.stream(requests)
+                .sorted((o1, o2) -> {
+                    
+                    int fs1 = videoSize[o1.getVideoId()];
+                    int fs2 = videoSize[o2.getVideoId()];
+                    return fs1 - fs2;
+                })
                 .forEach(request -> {
                     int endpointId = request.getEndpointId();
-                    
-
-                });
+                    Endpoint endpoint = endpoints[endpointId];
+                    boolean cached = false;
+                    for (Integer serverid : endpoint.getServerIdsInOrderOfLatency()) {
+                        if (servers[serverid] != null && servers[serverid].cached(request.getVideoId())) {
+                            cached = true;
+                        }
+                    }
+                    if (!cached) {
+                        for (Integer serverid : endpoint.getServerIdsInOrderOfLatency()) {
+                            if (servers[serverid] == null ) {
+                                servers[serverid] = new CacheServerStatus(serverid, new String[numberOfVideos], new ArrayList<>());
+                            }
+                            if (servers[serverid].fitsIn(request.getVideoId(),videoSize, capacityOfCacheServer)) {
+                                servers[serverid].cache(request.getVideoId());
+                                break;
+                            }
+                        }
+                    }
+                 });
+        List result  = new ArrayList();
+        for (CacheServerStatus server : servers) {
+            if (server != null && !server.getCachedVideoList().isEmpty()) {
+                result.add(server);
+            }
+        }
         return result;
     }
 }
