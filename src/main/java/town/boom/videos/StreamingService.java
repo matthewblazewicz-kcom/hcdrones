@@ -1,5 +1,6 @@
 package town.boom.videos;
 
+import lombok.Getter;
 import town.boom.Problem;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.IntStream;
 
+@Getter
 public class StreamingService extends Problem {
 
     private int numberOfVideos;
@@ -52,14 +54,85 @@ public class StreamingService extends Problem {
 
     @Override
     public List solve() {
+
+        StreamingService service = this;
+        List<CacheServerStatus> solution = new ArrayList<>();
+        String cachedVideos = "";
+
+        int usedCapacity = 0;
+        boolean firstVideo = true;
+
+        int[] videoRequests = new int[service.getNumberOfVideos()];
+        int[][] videoRequestsByEndpoint = new int[service.getNumberOfEndpoints()][service.getNumberOfVideos()];
+        for (int requestId = 0; requestId < service.getNumberOfRequests(); requestId++) {
+            Request r = service.getRequests()[requestId];
+            videoRequests[r.getVideoId()] += r.getNumberOfRequests();
+            videoRequestsByEndpoint[r.getEndpointId()][r.getVideoId()] += r.getNumberOfRequests();
+        }
+
+        int[][] videoRequestsByCacheServer = new int[service.getNumberOfServers()][service.getNumberOfVideos()];
+        for (int endpointId = 0; endpointId < service.getNumberOfEndpoints(); endpointId++) {
+            for (int serverId : service.getEndpoints()[endpointId].getConnectedServersIds()) {
+                for (int videoId = 0; videoId < service.getNumberOfVideos(); videoId++) {
+                    videoRequestsByCacheServer[serverId][videoId] += videoRequestsByEndpoint[endpointId][videoId];
+                }
+            }
+        }
+
+        double[][] videoScoresByCacheServer = new double[service.getNumberOfServers()][service.getNumberOfVideos()];
+        for (int endpointId = 0; endpointId < service.getNumberOfEndpoints(); endpointId++) {
+            for (int serverId : service.getEndpoints()[endpointId].getConnectedServersIds()) {
+                for (int videoId = 0; videoId < service.getNumberOfVideos(); videoId++) {
+                    videoScoresByCacheServer[serverId][videoId] += 1.00 * videoRequestsByEndpoint[endpointId][videoId]
+                            * (service.getEndpoints()[endpointId].getLatency()
+                            - service.getEndpoints()[endpointId].getLatencyByServerId()[serverId])
+                    ;
+                }
+            }
+        }
+
+        double[][] videoScoresWeightByCacheServer = new double[service.getNumberOfServers()][service.getNumberOfVideos()];
+        for (int endpointId = 0; endpointId < service.getNumberOfEndpoints(); endpointId++) {
+            for (int serverId : service.getEndpoints()[endpointId].getConnectedServersIds()) {
+                for (int videoId = 0; videoId < service.getNumberOfVideos(); videoId++) {
+                    videoScoresByCacheServer[serverId][videoId] += 1.00 * videoRequestsByEndpoint[endpointId][videoId]
+                            * (service.getEndpoints()[endpointId].getLatency()
+                            - service.getEndpoints()[endpointId].getLatencyByServerId()[serverId])
+                    / service.getVideoSize()[videoId];
+                }
+            }
+        }
+
+        double[] videoScores = new double[service.getNumberOfVideos()];
+        for (int videoId = 0; videoId < service.getNumberOfVideos(); videoId++) {
+            for (int serverId = 0; serverId < service.getNumberOfServers(); serverId++) {
+                videoScores[videoId] += videoScoresByCacheServer[serverId][videoId];
+            }
+        }
+
+        double[] videoScoresWeight = new double[service.getNumberOfVideos()];
+        for (int videoId = 0; videoId < service.getNumberOfVideos(); videoId++) {
+            for (int serverId = 0; serverId < service.getNumberOfServers(); serverId++) {
+                videoScoresWeight[videoId] += videoScoresWeightByCacheServer[serverId][videoId];
+            }
+        }
+
         CacheServerStatus[] servers = new CacheServerStatus[numberOfServers];
         Arrays.stream(requests)
                 .sorted((o1, o2) -> {
-                    
-                    int fs1 = videoSize[o1.getVideoId()];
-                    int fs2 = videoSize[o2.getVideoId()];
-                    return fs1 - fs2;
+                    double fs1 = videoScoresWeight[o1.getVideoId()];
+                    double fs2 = videoScoresWeight[o2.getVideoId()];
+                    return (int) (fs2 - fs1);
                 })
+                .skip(service.getNumberOfRequests() / 5)
+                .sorted((o1, o2) -> {
+//                    int fs1 = videoSize[o1.getVideoId()];
+//                    int fs2 = videoSize[o2.getVideoId()];
+                    double fs1 = videoScores[o1.getVideoId()];
+                    double fs2 = videoScores[o2.getVideoId()];
+                    return (int) (fs2 - fs1);
+                })
+//                .skip(service.getNumberOfRequests() / 10)
                 .forEach(request -> {
                     int endpointId = request.getEndpointId();
                     Endpoint endpoint = endpoints[endpointId];
